@@ -32,15 +32,14 @@ namespace robot
             for (int i = 0; i < doc.Paragraphs.Count; i++)
             {
                 string temp = doc.Paragraphs[i + 1].Range.Text.Trim();
-                Console.WriteLine(temp);
-                Console.WriteLine("++++++++");
+                
                 if (temp != string.Empty & temp != "\r\n" & temp != "\n" & temp != "\r")
                     fileContents.Add(temp);
-                //}
-                //foreach (string item in fileContents)
-                //{
-                //    Console.WriteLine(item);
-                //
+            }
+            foreach (string item in fileContents)
+            {
+                Console.WriteLine(item);
+                Console.WriteLine("++++++++");
             }
             Console.WriteLine(doc.Paragraphs.Count);
             doc.Close();
