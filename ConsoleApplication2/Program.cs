@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.Office.Interop.Excel;
 using Microsoft.Office.Interop.Word;
 using System.IO;
+using System.Data;
 
 namespace robot
 {
@@ -50,24 +51,26 @@ namespace robot
                 //.Select(s => s.Trim()).Where(s => !string.IsNullOrWhiteSpace(s) & s != "/").ToList();
                 fileContents.Add(temp);
             }
-
+            System.Data.DataTable candidates = new System.Data.DataTable("candidates");
         }
         #endregion
         #region //WriteToExcel
         public static void WriteToExcel(string excelPath)
         {
             Microsoft.Office.Interop.Excel.Application excelApp = new Microsoft.Office.Interop.Excel.Application();
-            //excelApp.Application.Workbooks.Add(true);
             excelApp.Visible = true;
-            Workbook wbook = excelApp.Workbooks.Open(excelPath, missing, missing, missing, missing, missing, missing, missing, missing, missing, missing, missing, missing, missing, missing);
-            Worksheet worksheet = (Worksheet)wbook.Worksheets["UT template"];
-            string temp = (string)((Microsoft.Office.Interop.Excel.Range)worksheet.Cells[1, 2]).Text;
-            worksheet.Cells[1, 2] = "列内容";
-            wbook.Save();
-            //worksheet.SaveAs(excelPath, missing, missing, missing, missing, missing, missing, missing, missing);
-            wbook.Close();
-            excelApp.Quit();
-            /*7设置某个单元格里的格式
+            if (File.Exists(excelPath))
+            {
+                Workbook wbook = excelApp.Workbooks.Open(excelPath, missing, missing, missing, missing, missing, missing, missing, missing, missing, missing, missing, missing, missing, missing);
+                Worksheet worksheet = (Worksheet)wbook.Worksheets["UT template"];
+                string temp = (string)((Microsoft.Office.Interop.Excel.Range)worksheet.Cells[1, 2]).Text;
+                worksheet.Cells[1, 2] = "列内容";
+                wbook.Save();
+                //worksheet.SaveAs(excelPath, missing, missing, missing, missing, missing, missing, missing, missing);
+                wbook.Close();
+                excelApp.Quit();
+            }
+                        /*7设置某个单元格里的格式
                 Excel.Range rtemp=worksheet.get_Range("A1","A1");
                 rtemp.Font.Name="宋体";
                 rtemp.Font.FontStyle="加粗"；
@@ -76,9 +79,46 @@ namespace robot
             Application app = new Application();
             Workbook wbook = app.Workbook.Add(Type.missing);
             Worksheet worksheet = (Worksheet)wbook.Worksheets[1];*/
-
         }
+        #endregion
+        #region
+        public static void DataTabletoExcel(System.Data.DataTable candidates, string excelPath)
+        {
+            if (candidates == null)
+            {
+                return;
+            }
+            int rowNum = candidates.Rows.Count;
+            int columnNum = candidates.Columns.Count;
+            int rowIndex = 1;
+            int columnIndex = 0;
+            Microsoft.Office.Interop.Excel.Application excelApp = new Microsoft.Office.Interop.Excel.Application();
+            excelApp.DefaultFilePath = @"C:\HR RPA\UT template.xlsx";
+            excelApp.DisplayAlerts = true;
+            Workbook wbook = excelApp.Workbooks.Open(excelPath, missing, missing, missing, missing, missing, missing, missing, missing, missing, missing, missing, missing, missing, missing);
+            Worksheet worksheet = (Worksheet)wbook.Worksheets["UT template"];
+            //excelApp.SheetsInNewWorkbook = 1;
+            //Workbook wbook = excelApp.Workbooks.Add(true);
 
+            //将DataTable的列名导入Excel表第一行
+            foreach (DataColumn dataColumn in candidates.Columns)
+            {
+                columnIndex++;
+                excelApp.Cells[rowIndex, columnIndex] = dataColumn.ColumnName;
+            }
+            //将DataTable中的数据导入Excel中
+            for (int i = 0; i < rowNum; i++)
+            {
+                rowIndex++;
+                columnIndex = 0;
+                for (int j = 0; j < columnNum; j++)
+                {
+                    columnIndex++;
+                    excelApp.Cells[rowIndex, columnIndex] = candidates.Rows[i][j].ToString();
+                }
+            }
+            wbook.Save();
+        }
         #endregion
         static void Main(string[] args)
         {
@@ -87,6 +127,8 @@ namespace robot
             string excelPath = @"C:\HR RPA\UT template.xlsx";
             WriteToExcel(excelPath);
             Console.ReadKey();
+            System.Data.DataTable candidates = new System.Data.DataTable("candidates");
+            
         }
     }
 }
