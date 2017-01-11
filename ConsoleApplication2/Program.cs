@@ -15,6 +15,26 @@ namespace robot
         static object missing = Type.Missing;
         public static List<string> fileContents = new List<string>();
         public static string fileContentString;
+        #region //InitializeDatatable
+        public static void InitializeDatatable(System.Data.DataTable candidates)
+        {
+            candidates.Columns.Add("ResumeRecommandDate", Type.GetType("System.String"));
+            candidates.Columns.Add("InterviewDate", Type.GetType("System.String"));
+            candidates.Columns.Add("ChineseName", Type.GetType("System.String"));
+            candidates.Columns.Add("EnglishName", Type.GetType("System.String"));
+            candidates.Columns.Add("JobStatus", Type.GetType("System.String"));
+            candidates.Columns.Add("Channel", Type.GetType("System.String"));
+            candidates.Columns.Add("ResourceName", Type.GetType("System.String"));
+            candidates.Columns.Add("Skill", Type.GetType("System.String"));
+            candidates.Columns.Add("RelatedYears", Type.GetType("System.String"));
+            candidates.Columns.Add("YearGraduated", Type.GetType("System.String"));
+            candidates.Columns.Add("CurrentCompany", Type.GetType("System.String"));
+            candidates.Columns.Add("University", Type.GetType("System.String"));
+            candidates.Columns.Add("ExpectedSalary", Type.GetType("System.String"));
+            candidates.Columns.Add("PhoneNumber", Type.GetType("System.String"));
+            candidates.Columns.Add("Email", Type.GetType("System.String"));
+        }
+        #endregion
         #region //ReadStringFromWord
         public static void ReadStringFromWord(string filePath)
         {
@@ -52,6 +72,8 @@ namespace robot
                 fileContents.Add(temp);
             }
             System.Data.DataTable candidates = new System.Data.DataTable("candidates");
+            InitializeDatatable(candidates);
+            //ResumeRecommendDate
         }
         #endregion
         #region //WriteToExcel
@@ -80,8 +102,8 @@ namespace robot
             Workbook wbook = app.Workbook.Add(Type.missing);
             Worksheet worksheet = (Worksheet)wbook.Worksheets[1];*/
         }
-        #endregion
-        #region
+        #endregion 
+        #region   //DataTabletoExcel
         public static void DataTabletoExcel(System.Data.DataTable candidates, string excelPath)
         {
             if (candidates == null)
