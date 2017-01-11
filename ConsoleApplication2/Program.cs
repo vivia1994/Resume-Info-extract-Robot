@@ -15,6 +15,7 @@ namespace robot
         static object missing = Type.Missing;
         public static List<string> fileContents = new List<string>();
         public static string fileContentString;
+        public static string skills = "";
         #region //InitializeDatatable
         public static void InitializeDatatable(System.Data.DataTable candidates)
         {
@@ -44,36 +45,58 @@ namespace robot
             object missing = Type.Missing;
             if (File.Exists(filePath))
             {
-                doc = word.Documents.Open(ref fileName, ref missing, ref missing, ref missing, ref missing, ref missing, ref missing, ref missing, ref missing, ref missing, ref missing, ref missing, ref missing, ref missing, ref missing, ref missing);
-                for (int i = 0; i < doc.Paragraphs.Count; i++)
+                try
                 {
-                    string temp = doc.Paragraphs[i + 1].Range.Text.Trim();
-                    if (temp != string.Empty & temp != "\r\n" & temp != "\n" & temp != "\r")
+                    word.Visible = true;
+                    doc = word.Documents.Open(ref fileName, ref missing, ref missing, ref missing, ref missing, ref missing, ref missing, ref missing, ref missing, ref missing, ref missing, ref missing, ref missing, ref missing, ref missing, ref missing);
+                    fileContentString = doc.Content.Text;
+                    /*for (int i = 0; i < doc.Paragraphs.Count; i++)
                     {
-                        fileContents.Add(temp);
+                        string temp = doc.Paragraphs[i + 1].Range.Text.Trim();
+                        if (temp != string.Empty & temp != "\r\a" & temp != "\a" & temp != "\r")
+                        {
+                            fileContents.Add(temp);
+                        }
                     }
+                    foreach (var item in fileContents)
+                    {
+                        Console.WriteLine(item); Console.WriteLine("___");
+                    }*/
+                    //test:表示向txt写入文本
+                    StreamWriter sw = new StreamWriter(@"C:\HR RPA\1.txt");
+                    sw.Write(fileContentString);
+                    sw.Close();
+                    Console.WriteLine(doc.Paragraphs.Count);
+                    doc.Close();
+                    word.Quit();
                 }
-                Console.WriteLine(doc.Paragraphs.Count);
-                doc.Close();
-                word.Quit();
+                catch (Exception ex)
+                {
+                    doc.Close();
+                    word.Quit();
+                }
             }
         }
         #endregion
-        #region //AnalyzeString
-        public static void AnalyzeString(string fileContentString)
+        #region //AnalyzeFileContents
+        public static void AnalyzeFileContents(string skills)
         {
-            foreach (string temp in fileContents)
-            {
-                fileContents.Remove(temp);
-                temp.Replace(char.ConvertFromUtf32(1), string.Empty).Replace(char.ConvertFromUtf32(7), string.Empty)
-                    .Replace(char.ConvertFromUtf32(21), string.Empty);
-                //fileContents = temp.Split(new string[3] { "\r", "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries)
-                //.Select(s => s.Trim()).Where(s => !string.IsNullOrWhiteSpace(s) & s != "/").ToList();
-                fileContents.Add(temp);
-            }
             System.Data.DataTable candidates = new System.Data.DataTable("candidates");
             InitializeDatatable(candidates);
-            //ResumeRecommendDate
+            fileContentString = fileContentString.Replace(char.ConvertFromUtf32(1), string.Empty).Replace(char.ConvertFromUtf32(7), string.Empty).Replace(char.ConvertFromUtf32(21), string.Empty);
+            /* foreach (string temp in fileContents)
+             {
+                 fileContents.Remove(temp);
+                 temp.Replace(char.ConvertFromUtf32(1), string.Empty).Replace(char.ConvertFromUtf32(7), string.Empty)
+                     .Replace(char.ConvertFromUtf32(21), string.Empty);
+                 //fileContents = temp.Split(new string[3] { "\r", "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries)
+                 //.Select(s => s.Trim()).Where(s => !string.IsNullOrWhiteSpace(s) & s != "/").ToList();
+                 fileContents.Add(temp);
+             }*/
+            fileContents = fileContentString.Split(new string[3] { "\r", "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()).Where(s => !string.IsNullOrWhiteSpace(s) & s != "/").ToList();
+            DataRow candidate = candidates.Rows.Add();
+            candidate["ResumeRecommendDate"] = DateTime.Now;
+            candidate["ChineseName"] = fileContents[0];
         }
         #endregion
         #region //WriteToExcel
@@ -92,11 +115,11 @@ namespace robot
                 wbook.Close();
                 excelApp.Quit();
             }
-                        /*7设置某个单元格里的格式
-                Excel.Range rtemp=worksheet.get_Range("A1","A1");
-                rtemp.Font.Name="宋体";
-                rtemp.Font.FontStyle="加粗"；
-                rtemp.Font.Size=5;*/
+            /*7设置某个单元格里的格式
+    Excel.Range rtemp=worksheet.get_Range("A1","A1");
+    rtemp.Font.Name="宋体";
+    rtemp.Font.FontStyle="加粗"；
+    rtemp.Font.Size=5;*/
             /*4:如果是新建一个excel文件:
             Application app = new Application();
             Workbook wbook = app.Workbook.Add(Type.missing);
@@ -144,13 +167,25 @@ namespace robot
         #endregion
         static void Main(string[] args)
         {
-            string filePath = @"C:\\En-51job_周瑞福(7502927).docx";
+            Console.WriteLine(string.Format("Pelease input wanted skills: "));
+            string filePath = @"C:\HR RPA\Recruiting Team\candidatesResume\En-51job_周瑞福(7502927).docx";
             //ReadStringFromWord(filePath);
             string excelPath = @"C:\HR RPA\UT template.xlsx";
-            WriteToExcel(excelPath);
-            Console.ReadKey();
-            System.Data.DataTable candidates = new System.Data.DataTable("candidates");
-            
+            //WriteToExcel(excelPath);
+            string rootPath = @"C:\HR RPA\Recruiting Team\candidatesResume";
+            foreach (string file in Directory.GetFiles(rootPath, "*.doc*"))
+            {
+                if (file.ToLower().Contains("lagou"))
+                {
+                    Console.WriteLine(file);
+                    //ReadStringFromWord(file);
+                    //AnalyzeFileContents(skills);
+                    ///DatatableToExcel(excelPath);
+                }
+            }
+
+
+            //skills = Console.ReadLine();
         }
     }
 }
