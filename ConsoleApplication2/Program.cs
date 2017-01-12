@@ -19,7 +19,7 @@ namespace robot
         #region //InitializeDatatable
         public static void InitializeDatatable(System.Data.DataTable candidates)
         {
-            candidates.Columns.Add("ResumeRecommandDate", Type.GetType("System.String"));
+            candidates.Columns.Add("ResumeRecommendDate", Type.GetType("System.String"));
             candidates.Columns.Add("InterviewDate", Type.GetType("System.String"));
             candidates.Columns.Add("ChineseName", Type.GetType("System.String"));
             candidates.Columns.Add("EnglishName", Type.GetType("System.String"));
@@ -66,7 +66,7 @@ namespace robot
                     StreamWriter sw = new StreamWriter(@"C:\HR RPA\1.txt");
                     sw.Write(fileContentString);
                     sw.Close();
-                    Console.WriteLine(doc.Paragraphs.Count);
+                    //Console.WriteLine(doc.Paragraphs.Count);
                     doc.Close();
                     word.Quit();
                 }
@@ -97,6 +97,33 @@ namespace robot
             DataRow candidate = candidates.Rows.Add();
             candidate["ResumeRecommendDate"] = DateTime.Now;
             candidate["ChineseName"] = fileContents[0];
+            candidate["ResourceName"] = candidate["ChineseName"];
+            candidate["PhoneNumber"] = fileContents[4].Split(new string[1] { "︳" }, StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()).ToList().ElementAtOrDefault(0);
+            candidate["Email"] = fileContents[4].Split(new string[1] { "︳" }, StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()).ToList().ElementAtOrDefault(1);
+            foreach(string fileContent in fileContents)
+            {
+                if (fileContent.Contains("毕业")){
+                    int yearGraduate = int.Parse(fileContent.Split(new string[1] { "年毕业" }, StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()).ToList().ElementAtOrDefault(0));
+                    candidate["YearGraduated"] = int.Parse(DateTime.Now.Year.ToString()) - yearGraduate + "年";
+                                   }
+            }
+            if (!string.IsNullOrEmpty(skills))
+            {
+                if (skills.Contains("|"))
+                {
+                    candidate["Skill"] = string.Join("，", skills.Split(new string[1] { "|" }, StringSplitOptions.RemoveEmptyEntries).Where(s => fileContentString.IndexOf(s, StringComparison.InvariantCultureIgnoreCase) >= 0));
+                }
+                else
+                {
+                    candidate["Skill"] = string.Join(", ", skills.Split(new string[1] { "" }, StringSplitOptions.RemoveEmptyEntries).Where(s => fileContentString.IndexOf(s, StringComparison.InvariantCultureIgnoreCase) >= 0));
+                }
+            }
+            else
+            {
+                candidate["Skill"] = "";
+            }
+            candidate["Channel"] = "LaGou";
+
         }
         #endregion
         #region //WriteToExcel
@@ -168,8 +195,9 @@ namespace robot
         static void Main(string[] args)
         {
             Console.WriteLine(string.Format("Pelease input wanted skills: "));
-            string filePath = @"C:\HR RPA\Recruiting Team\candidatesResume\En-51job_周瑞福(7502927).docx";
-            //ReadStringFromWord(filePath);
+            
+            string filePath = @"C:\HR RPA\Recruiting Team\candidatesResume\Zhao Zi Jun-赵子君的简历-Lagou.doc";
+            
             string excelPath = @"C:\HR RPA\UT template.xlsx";
             //WriteToExcel(excelPath);
             string rootPath = @"C:\HR RPA\Recruiting Team\candidatesResume";
@@ -177,13 +205,14 @@ namespace robot
             {
                 if (file.ToLower().Contains("lagou"))
                 {
-                    Console.WriteLine(file);
+                    //Console.WriteLine(file);
                     //ReadStringFromWord(file);
                     //AnalyzeFileContents(skills);
                     ///DatatableToExcel(excelPath);
                 }
             }
-
+            ReadStringFromWord(filePath);
+            AnalyzeFileContents(skills);
 
             //skills = Console.ReadLine();
         }
