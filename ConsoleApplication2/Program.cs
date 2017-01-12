@@ -330,7 +330,11 @@ namespace robot
         #region  //ReadExcelToDatatable
         public static Datatable ReadExcelToDatatable(string excelPath)
         {
+            //excel
+            Microsoft.Office.Interop.Excel.Application excelApp = new Microsoft.Office.Interop.Excel.Application();
+
             Datatable datatable = new Datatable();
+
             return datatable;
         }
         #endregion
@@ -387,7 +391,7 @@ namespace robot
             }
             finally
             {
-                workbook.Close(false, oMissiong, oMissiong);
+                workbook.Close();
                 System.Runtime.InteropServices.Marshal.ReleaseComObject(workbook);
                 workbook = null;
                 app.Workbooks.Close();
