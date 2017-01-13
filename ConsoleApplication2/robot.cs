@@ -19,7 +19,6 @@ namespace robot
         public static string fileContentString;
         public static string skills = "";
         public static System.Data.DataTable candidates = new System.Data.DataTable("candidates");
-        public static System.Data.DataTable datatable = new System.Data.DataTable();
         public static int fileCount = 0;
         public static string excelPath = @"C:\result\Candidate Database1.xlsx";
         private Stopwatch wath = new Stopwatch();
@@ -262,7 +261,7 @@ namespace robot
             Microsoft.Office.Interop.Excel.Application excelApp = new Microsoft.Office.Interop.Excel.Application();
             excelApp.DefaultFilePath = @"C:\HR RPA\UT template.xlsx";
             excelApp.DisplayAlerts = true;
-            Workbook wbook = excelApp.Workbooks.Open(excelPath, missing, missing, missing, missing, missing, missing, missing, missing, missing, missing, missing, missing, missing, missing);
+            Workbook wbook = excelApp.Workbooks.Open(excelPath);
             Worksheet worksheet = (Worksheet)wbook.Worksheets[1];
             //excelApp.SheetsInNewWorkbook = 1;
             //Workbook wbook = excelApp.Workbooks.Add(true);
@@ -328,61 +327,42 @@ namespace robot
         }
         #endregion
         #region  //ReadExcelToDatatable
-        public static Datatable ReadExcelToDatatable(string excelPath)
+        public static System.Data.DataTable ReadExcelToDatatable(string excelPath)
         {
             //excel
             Microsoft.Office.Interop.Excel.Application excelApp = new Microsoft.Office.Interop.Excel.Application();
-
-            Datatable datatable = new Datatable();
-
-            return datatable;
-        }
-        #endregion
-
-        
-        public static System.Data.DataTable ReadExcelToDatatable1(string excelFilePath)
-        {
-            Microsoft.Office.Interop.Excel.Application app = new Microsoft.Office.Interop.Excel.Application();
-             Workbook workbook = null;
-            Sheets sheets;
-            object oMissiong = System.Reflection.Missing.Value;
+            Workbook workbook = null;
+            Worksheet worksheet;
+System.Data.DataTable datatable = new System.Data.DataTable("datatable");
             try
             {
-                if (app == null)
-                {
+                if(excelApp == null)
                     return null;
-                }
-                workbook = app.Workbooks.Open(excelFilePath, oMissiong, oMissiong, oMissiong, oMissiong,
-                    oMissiong,oMissiong, oMissiong, oMissiong, oMissiong, oMissiong, oMissiong, oMissiong, oMissiong, oMissiong);
-                //将数据读入到DataTable中——Start   
-                sheets = workbook.Worksheets;
-                Worksheet worksheet = (Worksheet)sheets.get_Item(1);//读取第一张表
-                //worksheet = (Worksheet)workbook.Worksheets[1];
-                if (worksheet == null)
-                    return null;
-                int rowCount = worksheet.UsedRange.Rows.Count;
-                int colCount = worksheet.UsedRange.Columns.Count;
-                Microsoft.Office.Interop.Excel.Range range;
-                //datatable ColumnName--Start
-                int ColumnID = 1;
-                range = (Microsoft.Office.Interop.Excel.Range)worksheet.Cells[1, 1];
-                while (range.Text.ToString().Trim() != "")
+                workbook = excelApp.Workbooks.Open(excelPath);
+                worksheet = (Worksheet)workbook.Worksheets[1];
+                int rowExcelCount = worksheet.UsedRange.Rows.Count;
+                int columnExcelCount = worksheet.UsedRange.Columns.Count;
+                int rowExcelIndex = 1;
+                int columnExcelIndex = 1;
+                
+                Microsoft.Office.Interop.Excel.Range range = (Microsoft.Office.Interop.Excel.Range)worksheet.Cells[rowExcelIndex, columnExcelIndex];
+                //datatable name
+                while (!string.IsNullOrEmpty(range.Text.ToString().Trim()))
                 {
-                    datatable.Columns.Add(range.Text.ToString().Trim(),Type.GetType("System.String"));
-                    range = (Microsoft.Office.Interop.Excel.Range)worksheet.Cells[1, ++ColumnID];
+                    datatable.Columns.Add(range.Text.ToString(), Type.GetType("System.String"));
+                    range = (Microsoft.Office.Interop.Excel.Range)worksheet.Cells[1, ++columnExcelIndex];
                 }
-                //datatable ColumnName--End
-                for (int i = 2; i <= rowCount; i++)
+                //datatable contents
+                for (int i = 2; i <= rowExcelCount; i++)
                 {
                     DataRow datarow = datatable.NewRow();
-                    for (int j = 1; j <= colCount; j++)
+                    for (int j = 1; j <= columnExcelCount; j++)
                     {
                         range = (Microsoft.Office.Interop.Excel.Range)worksheet.Cells[i, j];
-                        datarow[j - 1] = (range.Value2 == null) ? "" : range.Text.ToString(); ;
+                        datarow[j - 1] = string.IsNullOrEmpty(range.Text.ToString().Trim()) ? "" : range.Text.ToString();
                     }
                     datatable.Rows.Add(datarow);
                 }
-                //将数据读入到DataTable中——End
                 return datatable;
             }
             catch
@@ -394,14 +374,16 @@ namespace robot
                 workbook.Close();
                 System.Runtime.InteropServices.Marshal.ReleaseComObject(workbook);
                 workbook = null;
-                app.Workbooks.Close();
-                app.Quit();
-                System.Runtime.InteropServices.Marshal.ReleaseComObject(app);
-                app = null;
+                excelApp.Workbooks.Close();
+                excelApp.Quit();
+                System.Runtime.InteropServices.Marshal.ReleaseComObject(excelApp);
+                excelApp = null;
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
             }
+           
         }
+        #endregion
         /* #region //ThreadReadExcel
         /// <summary>
         /// 使用COM，多线程读取Excel（1 主线程、4 副线程）
@@ -430,7 +412,7 @@ namespace robot
                 if (worksheet == null)
                     return null;
                 string cellContent;
-                int rowCount = worksheet.UsedRange.Rows.Count;
+                int rowExcelCount = worksheet.UsedRange.Rows.Count;
                 int colCount = worksheet.UsedRange.Columns.Count;
                 Microsoft.Office.Interop.Excel.Range range;
                 //负责列头Start
@@ -455,11 +437,11 @@ namespace robot
                 }
                 //End
                 //数据大于500条，使用多进程进行读取数据
-                if (rowCount - 1 > 500)
+                if (rowExcelCount - 1 > 500)
                 {
                     //开始多线程读取数据
                     //新建线程
-                    int b2 = (rowCount - 1) / 10;
+                    int b2 = (rowExcelCount - 1) / 10;
                     Microsoft.Office.Interop.Excel.DataTable dt1 = new Microsoft.Office.Interop.Excel.DataTable("dt1");
                     dt1 = datatable.Clone();
                     SheetOptions sheet1thread = new SheetOptions(worksheet, colCount, 2, b2 + 1, dt1);
@@ -483,7 +465,7 @@ namespace robot
                     Thread othread4 = new Thread(new ThreadStart(sheet4thread.SheetToDataTable));
                     othread4.Start();
                     //主线程读取剩余数据
-                    for (int i = b2 * 4 + 2; i <= rowCount; i++)
+                    for (int i = b2 * 4 + 2; i <= rowExcelCount; i++)
                     {
                         DataRow datarow = datatable.NewRow();
                         for (int j = 1; j <= colCount; j++)
@@ -519,7 +501,7 @@ namespace robot
                 }
                 else
                 {
-                    for (int i = 2; i <= rowCount; i++)
+                    for (int i = 2; i <= rowExcelCount; i++)
                     {
                         DataRow datarow = datatable.NewRow();
                         for (int j = 1; j <= colCount; j++)
@@ -560,10 +542,8 @@ namespace robot
             Console.WriteLine(string.Format("Pelease input wanted skills: "));
             skills = Console.ReadLine();
             string filePath = @"C:\HR RPA\Recruiting Team\candidatesResume\Zhao Zi Jun-赵子君的简历-Lagou.doc";
-            
-
-            //WriteToExcel(excelPath);
             string rootPath = @"C:\HR RPA\Recruiting Team\candidatesResume";
+
             //foreach (string file in Directory.GetFiles(rootPath, "*.doc*"))
             //{
             //    if (file.ToLower().Contains("lagou") )
@@ -577,10 +557,15 @@ namespace robot
             //    }
             //}
             //WriteDataTabletoExcel(candidates, excelPath);
-            string excelFilePath = @"C:\HR RPA\Recruiting Team\result\Candidate Database.xlsx";
-            ReadExcelToDatatable1(excelFilePath);
-            WriteDataTabletoExcel(datatable, excelPath);
-            Console.WriteLine(fileCount + " files has been updated!");
+
+
+
+            //string excelFilePath = @"C:\HR RPA\Recruiting Team\result\Candidate Database.xlsx";
+            //ReadExcelToDatatable1(excelFilePath);
+            //WriteDataTabletoExcel(datatable, excelPath);
+            //Console.WriteLine(fileCount + " files has been updated!");
+            ReadExcelToDatatable(excelPath);
+            WriteDataTabletoExcel(ReadExcelToDatatable(excelPath), @"C:\result\Candidate Database.xlsx");
         }
     }
 }
