@@ -242,8 +242,8 @@ namespace robot
     rtemp.Font.Size=5;*/
             /*4:如果是新建一个excel文件:
             Application app = new Application();
-            Workbook wbook = app.Workbook.Add(Type.missing);
-            Worksheet worksheet = (Worksheet)wbook.Worksheets[1];*/
+            Workbook workbook = app.Workbook.Add(Type.missing);
+            Worksheet worksheet = (Worksheet)workbook.Worksheets[1];*/
         }
         #endregion 
         #region   //WriteDataTabletoExcel
@@ -264,7 +264,7 @@ namespace robot
             Workbook wbook = excelApp.Workbooks.Open(excelPath);
             Worksheet worksheet = (Worksheet)wbook.Worksheets[1];
             //excelApp.SheetsInNewWorkbook = 1;
-            //Workbook wbook = excelApp.Workbooks.Add(true);
+            //Workbook workbook = excelApp.Workbooks.Add(true);
 
             //将DataTable的列名导入Excel表第一行
             foreach (DataColumn dataColumn in candidates.Columns)
@@ -288,42 +288,56 @@ namespace robot
         #endregion
         #region   //AppendDataTabletoExcel
         //TODO:追加
-        public static void AppendDataTabletoExcel(System.Data.DataTable candidates, string excelPath)
+        public static void AppendDataTabletoExcel(System.Data.DataTable candidates, string excelPath, int worksheetIndex)
         {
             if (candidates == null)
             {
                 return;
             }
-            int rowNum = candidates.Rows.Count;
-            int columnNum = candidates.Columns.Count;
-            int rowIndex = 1;
-            int columnIndex = 0;
+           
             Microsoft.Office.Interop.Excel.Application excelApp = new Microsoft.Office.Interop.Excel.Application();
-            excelApp.DefaultFilePath = @"C:\HR RPA\UT template.xlsx";
             excelApp.DisplayAlerts = true;
-            Workbook wbook = excelApp.Workbooks.Open(excelPath, missing, missing, missing, missing, missing, missing, missing, missing, missing, missing, missing, missing, missing, missing);
-            Worksheet worksheet = (Worksheet)wbook.Worksheets[1];
-            //excelApp.SheetsInNewWorkbook = 1;
-            //Workbook wbook = excelApp.Workbooks.Add(true);
-
-            //将DataTable的列名导入Excel表第一行
-            foreach (DataColumn dataColumn in candidates.Columns)
+            Workbook workbook = null;
+            Worksheet worksheet = null;
+            try
             {
-                columnIndex++;
-                excelApp.Cells[rowIndex, columnIndex] = dataColumn.ColumnName;
-            }
-            //将DataTable中的数据导入Excel中
-            for (int i = 0; i < rowNum; i++)
-            {
-                rowIndex++;
-                columnIndex = 0;
-                for (int j = 0; j < columnNum; j++)
+                workbook = excelApp.Workbooks.Open(excelPath);
+                worksheet = (Worksheet)workbook.Worksheets[worksheetIndex];
+                int rowNum = candidates.Rows.Count;
+                int columnNum = candidates.Columns.Count;
+                int rowIndex = worksheet.UsedRange.Rows.Count;
+                int columnIndex = worksheet.UsedRange.Columns.Count;
+                Console.WriteLine("excel:"+rowIndex+"--"+columnIndex);
+                //将DataTable中的数据导入Excel中
+                for (int i = 0; i < rowNum; i++)
                 {
-                    columnIndex++;
-                    excelApp.Cells[rowIndex, columnIndex] = candidates.Rows[i][j].ToString();
+                    rowIndex++;
+                    columnIndex = 0;
+                    for (int j = 0; j < columnNum; j++)
+                    {
+                        columnIndex++;
+                        excelApp.Cells[rowIndex, columnIndex] = candidates.Rows[i][j].ToString();
+                    }
                 }
+                workbook.Save();
             }
-            wbook.Save();
+            catch
+            {
+                return;
+            }
+            finally
+            {
+                worksheet = null;
+                workbook.Close();
+                System.Runtime.InteropServices.Marshal.ReleaseComObject(workbook);
+                workbook = null;
+                excelApp.Workbooks.Close();
+                excelApp.Quit();
+                System.Runtime.InteropServices.Marshal.ReleaseComObject(excelApp);
+                excelApp = null;
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+            }
         }
         #endregion
         #region  //ReadExcelToDatatable
@@ -342,6 +356,8 @@ System.Data.DataTable datatable = new System.Data.DataTable("datatable");
                 worksheet = (Worksheet)workbook.Worksheets[1];
                 int rowExcelCount = worksheet.UsedRange.Rows.Count;
                 int columnExcelCount = worksheet.UsedRange.Columns.Count;
+                Console.WriteLine(rowExcelCount);
+                Console.WriteLine(columnExcelCount);
                 int rowExcelIndex = 1;
                 int columnExcelIndex = 1;
                 
@@ -540,7 +556,7 @@ System.Data.DataTable datatable = new System.Data.DataTable("datatable");
         static void Main(string[] args)
         {
             Console.WriteLine(string.Format("Pelease input wanted skills: "));
-            skills = Console.ReadLine();
+            //skills = Console.ReadLine();
             string filePath = @"C:\HR RPA\Recruiting Team\candidatesResume\Zhao Zi Jun-赵子君的简历-Lagou.doc";
             string rootPath = @"C:\HR RPA\Recruiting Team\candidatesResume";
 
@@ -557,15 +573,12 @@ System.Data.DataTable datatable = new System.Data.DataTable("datatable");
             //    }
             //}
             //WriteDataTabletoExcel(candidates, excelPath);
-
-
-
+            
             //string excelFilePath = @"C:\HR RPA\Recruiting Team\result\Candidate Database.xlsx";
             //ReadExcelToDatatable1(excelFilePath);
             //WriteDataTabletoExcel(datatable, excelPath);
             //Console.WriteLine(fileCount + " files has been updated!");
-            ReadExcelToDatatable(excelPath);
-            WriteDataTabletoExcel(ReadExcelToDatatable(excelPath), @"C:\result\Candidate Database.xlsx");
+            AppendDataTabletoExcel(ReadExcelToDatatable(excelPath), @"C:\result\Candidate Database.xlsx",1);
         }
     }
 }
