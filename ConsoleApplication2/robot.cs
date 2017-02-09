@@ -356,8 +356,8 @@ System.Data.DataTable datatable = new System.Data.DataTable("datatable");
                 worksheet = (Worksheet)workbook.Worksheets[1];
                 int rowExcelCount = worksheet.UsedRange.Rows.Count;
                 int columnExcelCount = worksheet.UsedRange.Columns.Count;
-                Console.WriteLine(rowExcelCount);
-                Console.WriteLine(columnExcelCount);
+                Console.WriteLine("Source:" + rowExcelCount);
+                Console.WriteLine("Source:" + columnExcelCount);
                 int rowExcelIndex = 1;
                 int columnExcelIndex = 1;
                 
