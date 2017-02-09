@@ -20,7 +20,7 @@ namespace robot
         public static string skills = "";
         public static System.Data.DataTable candidates = new System.Data.DataTable("candidates");
         public static int fileCount = 0;
-        public static string excelPath = @"C:\result\Candidate Database1.xlsx";
+        public static string excelPath = Directory.GetCurrentDirectory() + @"\data\Candidate Database robot.xlsx";
         private Stopwatch wath = new Stopwatch();
         #region //InitializeDatatable
         public static void InitializeDatatable(System.Data.DataTable candidates)
@@ -92,13 +92,13 @@ namespace robot
             }
         }
         #endregion
-        #region //AnalyzeFileContents
+        #region //AnalyzeFileContents--LaGou
         public static void AnalyzeFileContents(string skills)
         {
-            if (candidates==null)
-            {
-                InitializeDatatable(candidates);
-            }
+        //    if (candidates==null)
+        //    {
+        //       InitializeDatatable(candidates);
+        //    } 
             fileContentString = fileContentString.Replace(char.ConvertFromUtf32(1), string.Empty).Replace(char.ConvertFromUtf32(7), string.Empty).Replace(char.ConvertFromUtf32(21), string.Empty);
             /* foreach (string temp in fileContents)
              {
@@ -556,29 +556,30 @@ System.Data.DataTable datatable = new System.Data.DataTable("datatable");
         static void Main(string[] args)
         {
             Console.WriteLine(string.Format("Pelease input wanted skills: "));
-            //skills = Console.ReadLine();
-            string filePath = @"C:\HR RPA\Recruiting Team\candidatesResume\Zhao Zi Jun-赵子君的简历-Lagou.doc";
-            string rootPath = @"C:\HR RPA\Recruiting Team\candidatesResume";
+            skills = Console.ReadLine();
+            //string filePath = Directory.GetCurrentDirectory() + @"\data\Fang Zi Jing-方子静UI-Lagou.doc";
+            string resumeFolder = Directory.GetCurrentDirectory() + @"\data";
+            InitializeDatatable(candidates);
+            foreach (string file in Directory.GetFiles(resumeFolder, "*.doc*"))
+            {
+                if (file.ToLower().Contains("lagou"))
+                {
+                    ReadStringFromWord(file);
+                    if (Regex.Matches(fileContentString, "[\u4e00-\u9fa5]").Count > 20)
+                    {
+                        Console.WriteLine(file);
+                        AnalyzeFileContents(skills);
+                    }
+                }
+            }
+            Console.WriteLine(excelPath); 
+            WriteDataTabletoExcel(candidates, excelPath);
 
-            //foreach (string file in Directory.GetFiles(rootPath, "*.doc*"))
-            //{
-            //    if (file.ToLower().Contains("lagou") )
-            //    {
-            //        ReadStringFromWord(filePath);
-            //        if(Regex.Matches(fileContentString, "[\u4e00-\u9fa5]").Count > 20)
-            //        {
-            //            Console.WriteLine(file);
-            //            AnalyzeFileContents(skills);
-            //        }
-            //    }
-            //}
-            //WriteDataTabletoExcel(candidates, excelPath);
-            
             //string excelFilePath = @"C:\HR RPA\Recruiting Team\result\Candidate Database.xlsx";
             //ReadExcelToDatatable1(excelFilePath);
-            //WriteDataTabletoExcel(datatable, excelPath);
-            //Console.WriteLine(fileCount + " files has been updated!");
-            AppendDataTabletoExcel(ReadExcelToDatatable(excelPath), @"C:\result\Candidate Database.xlsx",1);
+            ////WriteDataTabletoExcel(datatable, excelPath);
+            ////Console.WriteLine(fileCount + " files has been updated!");
+            //AppendDataTabletoExcel(ReadExcelToDatatable(excelPath), @"C:\result\Candidate Database.xlsx",1);
         }
     }
 }
